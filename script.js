@@ -1,16 +1,14 @@
-/* script.js - interactions for Rebix API dashboard
+/* script.js - Rebix API Dashboard interactions
    Features:
-   - hide loading screen and reveal main content
-   - search filter (live)
-   - open modal on icon-btn click, show endpoint + description
-   - copy endpoint button
-   - optional "Submit" button to run a sample GET (fetch) and show result
-   - NSFW endpoints show a warning prompt before open
-   - keyboard accessibility (Esc to close modal)
+   - Loading screen fade-out
+   - Live search filter
+   - Modal display for endpoints (with NSFW warning)
+   - Copy endpoint & optional submit (GET) button
+   - Keyboard accessibility (Esc to close modal, Enter/Space for buttons)
 */
 
 (() => {
-  // DOM refs
+  // --- DOM References ---
   const loadingScreen = document.getElementById('loading-screen');
   const mainContent = document.getElementById('main-content');
   const searchInput = document.getElementById('search-input');
@@ -25,7 +23,7 @@
   const apiQueryInputContainer = document.getElementById('apiQueryInputContainer');
   const modalCloseBtn = document.querySelector('.modal-close');
 
-  // helper: fade out loading then show main
+  // --- Loading screen fade ---
   function finishLoading() {
     loadingScreen.style.transition = 'opacity 350ms ease';
     loadingScreen.style.opacity = '0';
@@ -34,33 +32,20 @@
       mainContent.style.display = 'block';
     }, 360);
   }
+  window.addEventListener('load', () => setTimeout(finishLoading, 600));
 
-  // simulate loading assets / endpoints
-  window.addEventListener('load', () => {
-    // small delay so spinner visible
-    setTimeout(finishLoading, 600);
-  });
-
-  // SEARCH: filters table rows by route name / description
+  // --- Live Search Filter ---
   function handleSearchFilter() {
     const q = (searchInput.value || '').trim().toLowerCase();
-    // find all tbody rows
-    const rows = document.querySelectorAll('tbody tr');
-    rows.forEach(r => {
-      const text = (r.textContent || '').toLowerCase();
-      // if matches show, otherwise hide
-      r.style.display = text.includes(q) ? '' : 'none';
+    document.querySelectorAll('tbody tr').forEach(row => {
+      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
     });
   }
   searchInput.addEventListener('input', handleSearchFilter);
 
-  // MODAL MANAGEMENT
+  // --- Modal Management ---
   function openModal(name, desc, endpoint, isNsfw=false) {
-    // NSFW check
-    if (isNsfw) {
-      const ok = confirm("Cet endpoint est marqué NSFW. Voulez-vous continuer ?");
-      if (!ok) return;
-    }
+    if (isNsfw && !confirm("Cet endpoint est marqué NSFW. Voulez-vous continuer ?")) return;
 
     modal.setAttribute('aria-hidden','false');
     modalTitle.textContent = name || 'API Response';
@@ -69,9 +54,9 @@
     modalContentPre.classList.add('d-none');
     copyBtn.classList.remove('d-none');
     submitQueryBtn.classList.remove('d-none');
-    apiQueryInputContainer.innerHTML = ''; // clear
+    apiQueryInputContainer.innerHTML = '';
 
-    // If endpoint has query parameters, show a small input to allow editing before submit
+    // Show input fields if endpoint has query parameters
     try {
       const url = new URL(endpoint, window.location.origin);
       const params = Array.from(url.searchParams.entries());
@@ -80,7 +65,6 @@
         fragment.style.display = 'flex';
         fragment.style.gap = '8px';
         fragment.style.flexWrap = 'wrap';
-
         params.forEach(([k,v]) => {
           const label = document.createElement('label');
           label.style.fontSize = '12px';
@@ -90,28 +74,25 @@
           const input = document.createElement('input');
           input.value = v;
           input.dataset.key = k;
-          input.style.padding = '6px 8px';
-          input.style.borderRadius = '8px';
-          input.style.border = '1px solid rgba(255,255,255,0.04)';
-          input.style.background = 'transparent';
-          input.style.color = 'inherit';
-          input.style.minWidth = '120px';
+          Object.assign(input.style, {
+            padding: '6px 8px',
+            borderRadius: '8px',
+            border: '1px solid rgba(255,255,255,0.04)',
+            background: 'transparent',
+            color: 'inherit',
+            minWidth: '120px'
+          });
 
           const wrapper = document.createElement('div');
           wrapper.style.display = 'flex';
           wrapper.style.flexDirection = 'column';
-          wrapper.appendChild(label);
-          wrapper.appendChild(input);
+          wrapper.append(label, input);
           fragment.appendChild(wrapper);
         });
-
         apiQueryInputContainer.appendChild(fragment);
       }
-    } catch(e) {
-      // ignore malformed urls
-    }
+    } catch(e){}
 
-    // focus close for keyboard users
     modalCloseBtn.focus();
   }
 
@@ -121,111 +102,78 @@
     modalContentPre.classList.add('d-none');
   }
 
-  // Wire icon buttons in tables
+  // --- Icon button events ---
   document.querySelectorAll('.icon-btn').forEach(btn => {
-    btn.addEventListener('click', (ev) => {
-      const el = ev.currentTarget;
-      const path = el.dataset.apiPath || el.getAttribute('data-api-path');
-      const name = el.dataset.apiName || el.getAttribute('data-api-name') || 'API';
-      const desc = el.dataset.apiDesc || el.getAttribute('data-api-desc') || '';
-      const isNsfw = el.dataset.nsfw === "true" || el.getAttribute('data-nsfw') === 'true';
-
-      // Prepend origin if path seems relative
-      const endpoint = path && path.startsWith('/') ? (window.location.origin + path) : path;
-
-      openModal(name, desc, endpoint, isNsfw);
+    btn.setAttribute('tabindex','0');
+    btn.addEventListener('click', () => {
+      const path = btn.dataset.apiPath || btn.getAttribute('data-api-path');
+      const endpoint = path && path.startsWith('/') ? window.location.origin + path : path;
+      openModal(
+        btn.dataset.apiName || btn.getAttribute('data-api-name') || 'API',
+        btn.dataset.apiDesc || btn.getAttribute('data-api-desc') || '',
+        endpoint,
+        btn.dataset.nsfw === "true" || btn.getAttribute('data-nsfw') === 'true'
+      );
+    });
+    btn.addEventListener('keydown', e => {
+      if (['Enter',' '].includes(e.key)) { e.preventDefault(); btn.click(); }
     });
   });
 
-  // Copy endpoint to clipboard
+  // --- Copy Endpoint ---
   copyBtn.addEventListener('click', async () => {
     const text = modalEndpointP.textContent || '';
     if (!text) return;
     try {
       await navigator.clipboard.writeText(text);
       copyBtn.textContent = 'Copied!';
-      setTimeout(()=> copyBtn.textContent = 'Copy API', 1500);
-    } catch (err) {
+      setTimeout(() => copyBtn.textContent = 'Copy API', 1500);
+    } catch {
       copyBtn.textContent = 'Failed to copy';
-      setTimeout(()=> copyBtn.textContent = 'Copy API', 1500);
+      setTimeout(() => copyBtn.textContent = 'Copy API', 1500);
     }
   });
 
-  // Submit/try endpoint (GET only)
+  // --- Submit GET Request ---
   submitQueryBtn.addEventListener('click', async () => {
-    const rawEndpoint = modalEndpointP.textContent || '';
-    if (!rawEndpoint) return;
+    let endpoint = modalEndpointP.textContent || '';
+    if (!endpoint) return;
 
-    // rebuild URL from editable inputs, if present
-    let endpoint = rawEndpoint;
+    // Update with query inputs
     const inputs = apiQueryInputContainer.querySelectorAll('input[data-key]');
     if (inputs.length) {
       try {
-        const u = new URL(rawEndpoint);
-        inputs.forEach(i => {
-          u.searchParams.set(i.dataset.key, i.value || '');
-        });
+        const u = new URL(endpoint);
+        inputs.forEach(i => u.searchParams.set(i.dataset.key, i.value || ''));
         endpoint = u.toString();
-      } catch (e) {
-        // keep raw if parsing fails
-      }
+      } catch {}
     }
 
     modalContentPre.classList.remove('d-none');
     modalContentPre.textContent = 'Loading...';
-
     try {
       const res = await fetch(endpoint, { method: 'GET' });
-      // try to parse JSON, otherwise text
       const contentType = res.headers.get('content-type') || '';
-      let body;
-      if (contentType.includes('application/json')) body = await res.json();
-      else body = await res.text();
-
-      // pretty print
-      if (typeof body === 'object') {
-        modalContentPre.textContent = JSON.stringify(body, null, 2);
-      } else {
-        modalContentPre.textContent = body;
-      }
+      let body = contentType.includes('application/json') ? await res.json() : await res.text();
+      modalContentPre.textContent = typeof body === 'object' ? JSON.stringify(body, null, 2) : body;
     } catch (err) {
       modalContentPre.textContent = `Error: ${err.message || err}`;
     }
   });
 
-  // Close modal via close button and Esc key / click outside
+  // --- Close modal events ---
   modalCloseBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', (ev) => {
-    if (ev.target === modal) closeModal();
-  });
-  document.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Escape') closeModal();
-  });
+  modal.addEventListener('click', ev => { if (ev.target === modal) closeModal(); });
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeModal(); });
 
-  // Accessibility: ensure interactive elements have keyboard support
-  document.querySelectorAll('.icon-btn').forEach(btn => {
-    btn.setAttribute('tabindex','0');
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        btn.click();
-      }
-    });
-  });
+  // --- Disable right-click on modal content ---
+  document.querySelectorAll('.modal-content').forEach(m => m.addEventListener('contextmenu', e => e.preventDefault()));
 
-  // Small UX: hide developer-tool protector if user accepted to keep devtools (already in HTML)
-  // Add small protection: disable right-click on modal content (prevent quick inspect)
-  document.querySelectorAll('.modal-content').forEach(m => {
-    m.addEventListener('contextmenu', e => e.preventDefault());
-  });
-
-  // Graceful degradation: if fetch is blocked, inform user
+  // --- Graceful fallback ---
   if (!window.fetch) {
     submitQueryBtn.disabled = true;
     submitQueryBtn.title = "Fetch API not supported in this browser.";
   }
 
-  // Optional: show small friendly console log
   console.log("%cRebix API Dashboard ready", "color: #7c5cff; font-weight:700");
-
 })();
