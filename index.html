@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta itemprop="image" content="https://i.imgur.com/FLhymAB.jpeg">
+    <title>Rest API</title>
+    <meta property="og:title" content="Rest API">
+    <meta property="og:description" content="Rest Api By Crazy.">
+    <meta property="og:image" content="https://i.imgur.com/FLhymAB.jpeg">
+    <meta property="og:url" content="https://api-rebix.zone.id">
+    <meta property="og:image:secure_url" content="https://i.imgur.com/FLhymAB.jpeg">
+    <meta property="og:image:width" content="650">
+    <meta property="og:image:height" content="350">
+    <meta property="og:type" content="website">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans&display=swap">
+	<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./CSS/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+</head>
+<body>
+    <div id="loading-screen">
+        <div class="loading-spinner"></div>
+        <p class="loading-text">Loading API EndPoints...</p>
+    </div>
+
+    <!-- Modal for Play Console -->
+    <div id="apiResponseModal" class="modal" aria-hidden="true" role="dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 id="apiResponseModalLabel"></h5>
+                <button class="modal-close" aria-label="Close modal">×</button>
+            </div>
+            <div class="modal-body">
+                <p id="apiResponseModalDesc" class="text-muted"></p> 
+				<div id="apiQueryInputContainer"></div>
+                <button id="submitQueryBtn" class="console-btn d-none">Submit</button>
+                <pre id="apiResponseContent" class="d-none"></pre>
+                <p id="apiEndpoint" class="d-none"></p>
+                <button id="copyEndpointBtn" class="console-btn copy-btn d-none" aria-label="Copy API endpoint URL">Copy API</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="main-content" style="display:none;">
+        <!-- Navbar -->
+        <div class="navbar">
+			<div class="avatar">
+                <h3>Rebix Api</h3>
+            </div>
+            <div class="search-bar">
+                <i class="fas fa-search"></i>
+                <label for="search-input" class="sr-only">Search APIs</label>
+                <input id="search-input" type="text" placeholder="Search...">
+            </div>
+        </div>
+
+        <div class="card">
+            <h5>Welcome User :)</_></h5>
+            <p>NB: All ApiKeys Have Been Removed, Use Wisely!!</p>
+            <a href="https://wa.me/233245654110" class="btn">Contact</a>
+            <a href="https://whatsapp.com/channel/0029Vb67k3mAInPdZ4l9R60f" class="btn">Follow</a>
+            <a href="/api/stats" class="btn">Stats</a>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Ai's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-ai">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Gptlogic</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/gptlogic?q=hii&prompt=be%20friendly" data-api-name="Gptlogic" data-api-desc="AI-powered logic processing"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+						<tr>
+                            <td><i class="fa-solid fa-code"></i> Copilot</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/copilot?text=hii" data-api-name="Copilot" data-api-desc="An Ai Built By MicroSoft"><i class="fa-solid fa-play"></i></button></td>
+                        </tr><tr>
+                            <td><i class="fa-solid fa-code"></i> Gpt-5</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/gpt-5?q=hii" data-api-name="Gpt-5" data-api-desc="Latest Version Of Chat-Gpt"><i class="fa-solid fa-play"></i></button></td>
+                        </tr><tr>
+                            <td><i class="fa-solid fa-code"></i> Deep-Ai</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/deep-ai?query=hii" data-api-name="Deep-Ai" data-api-desc="An Ai Built For Deep Reasoning"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Gemma2</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/gemma2?q=hii" data-api-name="Gemma2" data-api-desc="Gemma2 AI query processing"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Qwen</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/qwen?q=hii" data-api-name="Qwen" data-api-desc="Qwen AI query processing"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Cohere</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/cohere?q=hii" data-api-name="Cohere" data-api-desc="Cohere AI query processing"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Deepseek-r1</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/deepseek-r1?q=hii" data-api-name="Deepseek-r1" data-api-desc="Deepseek R1 AI query processing"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Downloader's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-downloaders">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Tiktokdl</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/tiktok?url=https://vt.tiktok.com/ZSrRVYRUJ/" data-api-name="Tiktokdl" data-api-desc="Download TikTok videos"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Insagramdl</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path='/api/igdl?quality=480&url=' data-api-name="Instagramdl" data-api-desc="Download Instagram media"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Tiktok2dl</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/tiktok2?url=https://vt.tiktok.com/ZSrRVYRUJ/" data-api-name="Tiktok2dl" data-api-desc="Alternative TikTok downloader"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Facebookdl</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/facebook?url=https://www.facebook.com/share/r/12Jhv1vQ85G/" data-api-name="Facebookdl" data-api-desc="Download Facebook videos"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Applemusic</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/applemusic?q=sacrifice" data-api-name="Applemusic" data-api-desc="Download Applemusic tracks"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Youtubedl</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/ytdl?format=mp3&url=https://youtu.be/3ca64kJjhEU?si=Nn3YUbvQ5Go1AI0I" data-api-name="Youtubedl" data-api-desc="Download YouTube videos"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> YoutubeMp3</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/yta?url=https://youtu.be/3ca64kJjhEU?si=Nn3YUbvQ5Go1AI0I" data-api-name="YoutubeMp3" data-api-desc="Download YouTube audio"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> YoutubeMp4</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/ytv?url=https://youtu.be/3ca64kJjhEU?si=Nn3YUbvQ5Go1AI0I" data-api-name="YoutubeMp4" data-api-desc="Download YouTube video"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> YoutubePlay</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/ytplay?q=tamako%edit" data-api-name="YoutubePlay" data-api-desc="Search and play YouTube videos"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> GitClone</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/gitclone?url=https://github.com/Lord-Samuel/rebix-db" data-api-name="GitClone" data-api-desc="Clone GitHub repositories"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Search's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-search">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Pinterest</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/pinterest?q=anime" data-api-name="Pinterest" data-api-desc="Search Pinterest images"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> NpmSearch</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/npmsearch?q=baileys" data-api-name="NpmSearch" data-api-desc="Search NPM packages"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> TiktokSearch</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/tiktoksearch?q=pela" data-api-name="TiktokSearch" data-api-desc="Search TikTok content"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> SpotifySearch</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/spotifysearch?q=limitless" data-api-name="SpotifySearch" data-api-desc="Search Spotify tracks"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Lyrics</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/lyrics?q=ozeba" data-api-name="Lyrics" data-api-desc="Search song lyrics"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+						<tr>
+                            <td><i class="fa-solid fa-code"></i> Technews</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/technews" data-api-name="TechNewsSearch" data-api-desc="Search For The Latest Tech News"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> YoutubeSearch</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/yts?q=Tamako+edit+/+SOLO" data-api-name="YoutubeSearch" data-api-desc="Search YouTube videos"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> SearchImage</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/searchimage?query=naruto" data-api-name="SearchImage" data-api-desc="Search images"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Anime</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-anime">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> AnimeSearch</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/anisearch?q=naruto" data-api-name="AnimeSearch" data-api-desc="Search anime titles"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Animedl</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/anidl?url=https://www.bilibili.tv/id/video/4794964840158720?bstar_from=bstar-web.homepage.recommend.all" data-api-name="Animedl" data-api-desc="Download anime episodes"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> AnimeSearch</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/animesearch?q=naruto" data-api-name="AnimeSearch" data-api-desc="Alternative anime search"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Stalk's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-stalk">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Tiktok-Stalk</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/tiktokstalk?q=ronaldo" data-api-name="Tiktok-Stalk" data-api-desc="Stalk TikTok user profiles"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Tool's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-tools">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Enhance</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/enhance?url=https://i.pinimg.com/736x/f9/0f/85/f90f8504271cedf0681a297a7d69c593.jpg" data-api-name="Upscale" data-api-desc="Upscale images"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Random-img</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/randomImage" data-api-name="Random-Img" data-api-desc="Get random images"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-nsfw"></i> Nsfw's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-nsfw">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Pussy</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/nsfw/pussy" data-api-name="Pussy" data-api-desc="NSFW content" data-nsfw="true"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Cuckold</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/nsfw/cuckold" data-api-name="Cuckold" data-api-desc="NSFW content" data-nsfw="true"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Yuri</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/nsfw/yuri" data-api-name="Yuri" data-api-desc="NSFW content" data-nsfw="true"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Milf</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/nsfw/milf" data-api-name="Milf" data-api-desc="NSFW content" data-nsfw="true"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Blowjob</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/nsfw/blowjob" data-api-name="Blowjob" data-api-desc="NSFW content" data-nsfw="true"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-nsfw"></i> Tool's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-tools-extra">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Ssweb</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/ssweb?url=https://google.com" data-api-name="Ssweb" data-api-desc="Take website screenshots"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Tinyurl</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/tinyurl?url=https://google.com" data-api-name="Tinyurl" data-api-desc="Shorten URLs"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Translate</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/translate?text=I%20love%20you&to=id" data-api-name="Translate" data-api-desc="Translate text"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> RemoveBg</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/removebg?url=https://files.catbox.moe/dv8r14.jpg" data-api-name="RemoveBg" data-api-desc="Remove image backgrounds"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Txt2Img</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/txt2img?q=naruto%20from%20naruto" data-api-name="Txt2Img" data-api-desc="Generate images from text"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Random</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-random">
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Random-Quotes</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/randomquotes" data-api-name="Random-Quotes" data-api-desc="Get random quotes"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Random-Facts</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/facts" data-api-name="Random-Facts" data-api-desc="Get random facts"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <div class="data-category">
+                <h5><i class="fa-solid fa-layer-group"></i> Images's</h5>
+                <table>
+                    <thead>
+                        <tr>
+                            <th scope="col">Route</th>
+                            <th scope="col">Method</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Try</th>
+                        </tr>
+                    </thead>
+                    <tbody id="routes-table-body-images">
+						<tr>
+                            <td><i class="fa-solid fa-code"></i> Waifu</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/waifu" data-api-name="Waifu" data-api-desc="Waifu pictures"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+						<tr>
+                            <td><i class="fa-solid fa-code"></i> Cosplay</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/cosplay" data-api-name="Waifu" data-api-desc="Anime Cosplay Pictures"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+						<tr>
+                            <td><i class="fa-solid fa-code"></i> Couplepp</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/couplepp" data-api-name="Waifu" data-api-desc="Couple Pictures"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> BlueArchive</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/bluearchive" data-api-name="BlueArchive" data-api-desc="Get Blue Archive images"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Technology</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/wallpaper/technology" data-api-name="Technology" data-api-desc="Get technology wallpapers"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                        <tr>
+                            <td><i class="fa-solid fa-code"></i> Programming</td>
+                            <td>GET</td>
+                            <td><span class="badge"><i class="fa-regular fa-circle-check"></i></span></td>
+                            <td><button class="icon-btn" data-api-path="/api/wallpaper/programming" data-api-name="Programming" data-api-desc="Get programming wallpapers"><i class="fa-solid fa-play"></i></button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div>
+            <footer>
+                © 2025, Created by <a href="https://github.com/Crazynotdev"><b>Crazy-Dev</b></a>
+            </footer>
+        </div>
+
+        <script src="./script.js"></script>
+		<script>
+			const devtoolsDetector = setInterval(() => {
+				const threshold = 160;
+				if (window.outerWidth - window.innerWidth > threshold || window.outerHeight - window.innerHeight > threshold) {
+					document.body.innerHTML = `<center>Simply Close Dev Tools 🗿</center>`;
+					clearInterval(devtoolsDetector); 
+				}
+			}, 200); 
+			const erudaCheck = () => {
+				if (typeof eruda !== 'undefined') {
+					document.body.innerHTML = `<center>Please Don't Be Stuborn </center>`;
+				} else {
+					setTimeout(erudaCheck, 1000); 
+				}
+			};
+			erudaCheck();
+		</script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+		<script>hljs.highlightAll();</script>
+    </div>
+</body>
+</html>
