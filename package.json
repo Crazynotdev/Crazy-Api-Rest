@@ -18,7 +18,6 @@
     "deepai": "^1.0.21",
     "download-git-repo": "^3.0.2",
     "express": "^4.21.0",
-    "freyr-js": "^2.11.0",
     "genius-lyrics": "^4.4.0",
     "gogoanime-downloader": "^1.0.4",
     "google-translate-api-x": "^10.1.0",
