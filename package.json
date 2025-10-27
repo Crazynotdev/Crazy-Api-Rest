@@ -1,27 +1,28 @@
+
 {
   "name": "crazy-api",
   "version": "1.0.0",
-  "description": "Rest API By Crazy – serverless ready",
+  "description": "Rest API By Crazy - Functional with free APIs",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "author": "Crazy-Dev",
-  "license": "MIT",
-  "engines": {
-    "node": ">=18"
-  },
+  "license": "ISC",
   "dependencies": {
     "@huggingface/inference": "^2.8.0",
     "axios": "^1.7.7",
     "cors": "^2.8.5",
-    "ytdl-core": "^4.11.4",
+    "deepai": "^1.0.21",
     "express": "^4.21.0",
-    "dotenv": "^16.3.1",
     "genius-lyrics": "^4.4.0",
     "google-translate-api-x": "^10.1.0",
     "npm-registry-fetch": "^17.1.0",
     "sharp": "^0.33.5",
+    "ytdl-core": "^4.15.2",
     "yt-search": "^2.12.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
