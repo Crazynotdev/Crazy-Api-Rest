@@ -15,6 +15,7 @@
     "@huggingface/inference": "^2.8.0",
     "axios": "^1.7.7",
     "cors": "^2.8.5",
+    "ytdl-core": "^4.11.4",
     "express": "^4.21.0",
     "dotenv": "^16.3.1",
     "genius-lyrics": "^4.4.0",
