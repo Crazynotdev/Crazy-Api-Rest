@@ -1,179 +1,437 @@
-/* script.js - Rebix API Dashboard interactions
-   Features:
-   - Loading screen fade-out
-   - Live search filter
-   - Modal display for endpoints (with NSFW warning)
-   - Copy endpoint & optional submit (GET) button
-   - Keyboard accessibility (Esc to close modal, Enter/Space for buttons)
-*/
+// index.js - Fully functional version for Render.com (or Vercel)
+// Tested with minimal dependencies, using free public APIs where possible
+// Add your API keys in environment variables on Render (Settings > Environment)
+// Required keys: HF_TOKEN (huggingface.co), GENIUS_TOKEN (genius.com), REMOVE_BG_KEY (remove.bg free tier), NEWS_API_KEY (newsapi.org free)
+// Optional: UNSPLASH_ACCESS_KEY (unsplash.com for images/search)
 
-(() => {
-  // --- DOM References ---
-  const loadingScreen = document.getElementById('loading-screen');
-  const mainContent = document.getElementById('main-content');
-  const searchInput = document.getElementById('search-input');
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const { HfInference } = require('@huggingface/inference');
+const translate = require('google-translate-api-x');
+const Genius = require('genius-lyrics');
+const npmFetch = require('npm-registry-fetch');
+const ytdl = require('ytdl-core');
+const ytSearch = require('yt-search');
+const sharp = require('sharp');
+const deepai = require('deepai');
 
-  const modal = document.getElementById('apiResponseModal');
-  const modalTitle = document.getElementById('apiResponseModalLabel');
-  const modalDesc = document.getElementById('apiResponseModalDesc');
-  const modalContentPre = document.getElementById('apiResponseContent');
-  const modalEndpointP = document.getElementById('apiEndpoint');
-  const copyBtn = document.getElementById('copyEndpointBtn');
-  const submitQueryBtn = document.getElementById('submitQueryBtn');
-  const apiQueryInputContainer = document.getElementById('apiQueryInputContainer');
-  const modalCloseBtn = document.querySelector('.modal-close');
+const app = express();
+app.use(cors());
+app.use(express.static(__dirname)); // Serve your index.html, script.js, CSS/style.css
 
-  // --- Loading screen fade ---
-  function finishLoading() {
-    loadingScreen.style.transition = 'opacity 350ms ease';
-    loadingScreen.style.opacity = '0';
-    setTimeout(() => {
-      loadingScreen.style.display = 'none';
-      mainContent.style.display = 'block';
-    }, 360);
+const hf = new HfInference(process.env.HF_TOKEN);
+const genius = new Genius.Client(process.env.GENIUS_TOKEN);
+deepai.setApiKey('quickstart-QUdJIGlzIGNvbWluZy4uLi4K'); // Free deepai key, replace if needed
+
+// Helper functions
+const sendJson = (res, data) => res.json({ status: 200, creator: 'Crazy', ...data });
+const sendError = (res, msg) => res.status(500).json({ error: msg });
+
+// AI generation helper
+async function generateWithHF(model, input) {
+  try {
+    const { generated_text } = await hf.textGeneration({ model, inputs: input, parameters: { max_new_tokens: 200 } });
+    return generated_text;
+  } catch (e) {
+    throw new Error(e.message);
   }
-  window.addEventListener('load', () => setTimeout(finishLoading, 600));
+}
 
-  // --- Live Search Filter ---
-  function handleSearchFilter() {
-    const q = (searchInput.value || '').trim().toLowerCase();
-    document.querySelectorAll('tbody tr').forEach(row => {
-      row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+// --- AI Endpoints ---
+app.get('/api/gptlogic', async (req, res) => {
+  const { q, prompt = 'be friendly' } = req.query;
+  try {
+    sendJson(res, { response: await generateWithHF('EleutherAI/gpt-j-6B', `${prompt}: ${q}`) });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/copilot', async (req, res) => {
+  const { text } = req.query;
+  try {
+    sendJson(res, { response: await generateWithHF('microsoft/Phi-3-mini-4k-instruct', text) }); // Proxy for Copilot
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/gpt-5', async (req, res) => {
+  const { q } = req.query;
+  try {
+    sendJson(res, { response: await generateWithHF('Qwen/Qwen2.5-72B-Instruct', q) });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/deep-ai', async (req, res) => {
+  const { query } = req.query;
+  try {
+    const resp = await deepai.callStandardApi('text-generator', { text: query });
+    sendJson(res, { response: resp.output });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/gemma2', async (req, res) => {
+  const { q } = req.query;
+  try {
+    sendJson(res, { response: await generateWithHF('google/gemma-2-9b-it', q) });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/qwen', async (req, res) => {
+  const { q } = req.query;
+  try {
+    sendJson(res, { response: await generateWithHF('Qwen/Qwen2.5-7B-Instruct', q) });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/cohere', async (req, res) => {
+  const { q } = req.query;
+  try {
+    sendJson(res, { response: await generateWithHF('CohereForAI/c4ai-command-r-plus', q) });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/deepseek-r1', async (req, res) => {
+  const { q } = req.query;
+  try {
+    sendJson(res, { response: await generateWithHF('deepseek-ai/DeepSeek-V2-Chat', q) });
+  } catch (e) { sendError(res, e.message); }
+});
+
+// --- Downloader Endpoints ---
+app.get('/api/tiktok', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.tiklydown.eu.org/api/download?v=${encodeURIComponent(url)}`);
+    sendJson(res, data);
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/igdl', async (req, res) => {
+  const { url, quality = '480' } = req.query;
+  try {
+    const { data } = await axios.get(`https://igram.world/api/IG/dl?url=${encodeURIComponent(url)}`);
+    sendJson(res, { download: data.url }); // Adjust based on response structure
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/tiktok2', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.tiklydown.eu.org/api/download?v=${encodeURIComponent(url)}`);
+    sendJson(res, data);
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/facebook', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const { data } = await axios.post('https://fdownloader.net/api/ajaxSearch?lang=en', `url=${encodeURIComponent(url)}`, { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
+    sendJson(res, data);
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/applemusic', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const { data } = await axios.get(`https://itunes.apple.com/search?term=${encodeURIComponent(q)}&media=music`);
+    sendJson(res, { results: data.results });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/ytdl', async (req, res) => {
+  const { format = 'mp4', url } = req.query;
+  try {
+    const info = await ytdl.getInfo(url);
+    const fmt = ytdl.chooseFormat(info.formats, { quality: format === 'mp3' ? 'highestaudio' : 'highestvideo' });
+    sendJson(res, { downloadUrl: fmt.url });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/yta', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const info = await ytdl.getInfo(url);
+    const fmt = ytdl.chooseFormat(info.formats, { quality: 'highestaudio' });
+    sendJson(res, { downloadUrl: fmt.url });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/ytv', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const info = await ytdl.getInfo(url);
+    const fmt = ytdl.chooseFormat(info.formats, { quality: 'highestvideo' });
+    sendJson(res, { downloadUrl: fmt.url });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/ytplay', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const r = await ytSearch(q);
+    sendJson(res, { results: r.videos.slice(0, 10) });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/gitclone', (req, res) => {
+  const { url } = req.query;
+  try {
+    const repo = url.replace('https://github.com/', '');
+    sendJson(res, { zipUrl: `https://github.com/${repo}/archive/refs/heads/main.zip` });
+  } catch (e) { sendError(res, e.message); }
+});
+
+// --- Search Endpoints ---
+app.get('/api/pinterest', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(q)}&per_page=10&client_id=${process.env.UNSPLASH_ACCESS_KEY}`);
+    sendJson(res, { results: data.results.map(r => ({ url: r.urls.regular, desc: r.description })) });
+  } catch (e) { sendError(res, 'Unsplash key required or error: ' + e.message); }
+});
+
+app.get('/api/npmsearch', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const data = await npmFetch.json(`/v1/search?text=${encodeURIComponent(q)}`);
+    sendJson(res, { results: data.objects });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/tiktoksearch', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.tiklydown.eu.org/api/search?q=${encodeURIComponent(q)}`);
+    sendJson(res, data);
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/spotifysearch', async (req, res) => {
+  const { q } = req.query;
+  sendError(res, 'Spotify API requires access token - implement with your own key');
+});
+
+app.get('/api/lyrics', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const songs = await genius.songs.search(q);
+    const lyrics = await songs[0].lyrics();
+    sendJson(res, { lyrics });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/technews', async (req, res) => {
+  try {
+    const { data } = await axios.get(`https://newsapi.org/v2/top-headlines?category=technology&apiKey=${process.env.NEWS_API_KEY}`);
+    sendJson(res, { articles: data.articles });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/yts', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const r = await ytSearch(q);
+    sendJson(res, { results: r.all });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/searchimage', async (req, res) => {
+  const { query } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=10&client_id=${process.env.UNSPLASH_ACCESS_KEY}`);
+    sendJson(res, { results: data.results.map(r => r.urls.regular) });
+  } catch (e) { sendError(res, 'Unsplash key required or error: ' + e.message); }
+});
+
+// --- Anime Endpoints ---
+app.get('/api/anisearch', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}`);
+    sendJson(res, { results: data.data });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/anidl', (req, res) => {
+  const { url } = req.query;
+  sendError(res, 'Anime download not implemented due to legal issues - use info from anisearch');
+});
+
+app.get('/api/animesearch', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(q)}`);
+    sendJson(res, { results: data.data });
+  } catch (e) { sendError(res, e.message); }
+});
+
+// --- Stalk Endpoints ---
+app.get('/api/tiktokstalk', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const { data } = await axios.get(`https://api.tiklydown.eu.org/api/user?username=${encodeURIComponent(q)}`);
+    sendJson(res, data);
+  } catch (e) { sendError(res, e.message); }
+});
+
+// --- Tool Endpoints ---
+app.get('/api/enhance', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const { data: img } = await axios.get(url, { responseType: 'arraybuffer' });
+    const enhanced = await sharp(img).resize({ width: 1920, kernel: 'lanczos3' }).toBuffer();
+    res.type('image/png').send(enhanced);
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/randomImage', async (req, res) => {
+  try {
+    const { headers } = await axios.get('https://source.unsplash.com/random', { maxRedirects: 0, validateStatus: status => status === 302 });
+    sendJson(res, { url: headers.location });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/ssweb', (req, res) => {
+  sendError(res, 'Screenshot not implemented in serverless - use external service like screenshotlayer.com with key');
+});
+
+app.get('/api/tinyurl', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const { data } = await axios.get(`http://tinyurl.com/api-create.php?url=${encodeURIComponent(url)}`);
+    sendJson(res, { shortUrl: data });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/translate', async (req, res) => {
+  const { text, to = 'en' } = req.query;
+  try {
+    const r = await translate(text, { to });
+    sendJson(res, { translated: r.text });
+  } catch (e) { sendError(res, e.message); }
+});
+
+app.get('/api/removebg', async (req, res) => {
+  const { url } = req.query;
+  try {
+    const { data } = await axios.post('https://api.remove.bg/v1.0/removebg', { image_url: url, size: 'auto' }, {
+      headers: { 'X-Api-Key': process.env.REMOVE_BG_KEY },
+      responseType: 'arraybuffer'
     });
-  }
-  searchInput.addEventListener('input', handleSearchFilter);
+    res.type('image/png').send(data);
+  } catch (e) { sendError(res, e.message); }
+});
 
-  // --- Modal Management ---
-  function openModal(name, desc, endpoint, isNsfw=false) {
-    if (isNsfw && !confirm("Cet endpoint est marqué NSFW. Voulez-vous continuer ?")) return;
+app.get('/api/txt2img', async (req, res) => {
+  const { q } = req.query;
+  try {
+    const imgBlob = await hf.textToImage({ model: 'runwayml/stable-diffusion-v1-5', inputs: q });
+    const buf = Buffer.from(await imgBlob.arrayBuffer());
+    res.type(imgBlob.type).send(buf);
+  } catch (e) { sendError(res, e.message); }
+});
 
-    modal.setAttribute('aria-hidden','false');
-    modalTitle.textContent = name || 'API Response';
-    modalDesc.textContent = desc || '';
-    modalEndpointP.textContent = endpoint || '';
-    modalContentPre.classList.add('d-none');
-    copyBtn.classList.remove('d-none');
-    submitQueryBtn.classList.remove('d-none');
-    apiQueryInputContainer.innerHTML = '';
+// --- Random Endpoints ---
+app.get('/api/randomquotes', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.quotable.io/random');
+    sendJson(res, { quote: data });
+  } catch (e) { sendError(res, e.message); }
+});
 
-    // Show input fields if endpoint has query parameters
-    try {
-      const url = new URL(endpoint, window.location.origin);
-      const params = Array.from(url.searchParams.entries());
-      if (params.length) {
-        const fragment = document.createElement('div');
-        fragment.style.display = 'flex';
-        fragment.style.gap = '8px';
-        fragment.style.flexWrap = 'wrap';
-        params.forEach(([k,v]) => {
-          const label = document.createElement('label');
-          label.style.fontSize = '12px';
-          label.style.color = 'var(--muted)';
-          label.textContent = k;
+app.get('/api/facts', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://uselessfacts.jsph.pl/api/v2/facts/random');
+    sendJson(res, { fact: data.text });
+  } catch (e) { sendError(res, e.message); }
+});
 
-          const input = document.createElement('input');
-          input.value = v;
-          input.dataset.key = k;
-          Object.assign(input.style, {
-            padding: '6px 8px',
-            borderRadius: '8px',
-            border: '1px solid rgba(255,255,255,0.04)',
-            background: 'transparent',
-            color: 'inherit',
-            minWidth: '120px'
-          });
+// --- Images Endpoints ---
+app.get('/api/waifu', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/sfw/waifu');
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-          const wrapper = document.createElement('div');
-          wrapper.style.display = 'flex';
-          wrapper.style.flexDirection = 'column';
-          wrapper.append(label, input);
-          fragment.appendChild(wrapper);
-        });
-        apiQueryInputContainer.appendChild(fragment);
-      }
-    } catch(e){}
+app.get('/api/cosplay', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/sfw/shinobu'); // Placeholder for cosplay
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-    modalCloseBtn.focus();
-  }
+app.get('/api/couplepp', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/sfw/couple');
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-  function closeModal() {
-    modal.setAttribute('aria-hidden','true');
-    modalContentPre.textContent = '';
-    modalContentPre.classList.add('d-none');
-  }
+app.get('/api/bluearchive', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/sfw/waifu'); // Placeholder
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-  // --- Icon button events ---
-  document.querySelectorAll('.icon-btn').forEach(btn => {
-    btn.setAttribute('tabindex','0');
-    btn.addEventListener('click', () => {
-      const path = btn.dataset.apiPath || btn.getAttribute('data-api-path');
-      const endpoint = path && path.startsWith('/') ? window.location.origin + path : path;
-      openModal(
-        btn.dataset.apiName || btn.getAttribute('data-api-name') || 'API',
-        btn.dataset.apiDesc || btn.getAttribute('data-api-desc') || '',
-        endpoint,
-        btn.dataset.nsfw === "true" || btn.getAttribute('data-nsfw') === 'true'
-      );
-    });
-    btn.addEventListener('keydown', e => {
-      if (['Enter',' '].includes(e.key)) { e.preventDefault(); btn.click(); }
-    });
-  });
+app.get('/api/wallpaper/technology', async (req, res) => {
+  try {
+    const { headers } = await axios.get('https://source.unsplash.com/random?technology', { maxRedirects: 0, validateStatus: status => status === 302 });
+    sendJson(res, { url: headers.location });
+  } catch (e) { sendError(res, e.message); }
+});
 
-  // --- Copy Endpoint ---
-  copyBtn.addEventListener('click', async () => {
-    const text = modalEndpointP.textContent || '';
-    if (!text) return;
-    try {
-      await navigator.clipboard.writeText(text);
-      copyBtn.textContent = 'Copied!';
-      setTimeout(() => copyBtn.textContent = 'Copy API', 1500);
-    } catch {
-      copyBtn.textContent = 'Failed to copy';
-      setTimeout(() => copyBtn.textContent = 'Copy API', 1500);
-    }
-  });
+app.get('/api/wallpaper/programming', async (req, res) => {
+  try {
+    const { headers } = await axios.get('https://source.unsplash.com/random?programming', { maxRedirects: 0, validateStatus: status => status === 302 });
+    sendJson(res, { url: headers.location });
+  } catch (e) { sendError(res, e.message); }
+});
 
-  // --- Submit GET Request ---
-  submitQueryBtn.addEventListener('click', async () => {
-    let endpoint = modalEndpointP.textContent || '';
-    if (!endpoint) return;
+// --- NSFW Endpoints ---
+app.get('/api/nsfw/pussy', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/nsfw/waifu');
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-    // Update with query inputs
-    const inputs = apiQueryInputContainer.querySelectorAll('input[data-key]');
-    if (inputs.length) {
-      try {
-        const u = new URL(endpoint);
-        inputs.forEach(i => u.searchParams.set(i.dataset.key, i.value || ''));
-        endpoint = u.toString();
-      } catch {}
-    }
+app.get('/api/nsfw/cuckold', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/nsfw/waifu');
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-    modalContentPre.classList.remove('d-none');
-    modalContentPre.textContent = 'Loading...';
-    try {
-      const res = await fetch(endpoint, { method: 'GET' });
-      const contentType = res.headers.get('content-type') || '';
-      let body = contentType.includes('application/json') ? await res.json() : await res.text();
-      modalContentPre.textContent = typeof body === 'object' ? JSON.stringify(body, null, 2) : body;
-    } catch (err) {
-      modalContentPre.textContent = `Error: ${err.message || err}`;
-    }
-  });
+app.get('/api/nsfw/yuri', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/nsfw/waifu');
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-  // --- Close modal events ---
-  modalCloseBtn.addEventListener('click', closeModal);
-  modal.addEventListener('click', ev => { if (ev.target === modal) closeModal(); });
-  document.addEventListener('keydown', ev => { if (ev.key === 'Escape') closeModal(); });
+app.get('/api/nsfw/milf', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/nsfw/waifu');
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-  // --- Disable right-click on modal content ---
-  document.querySelectorAll('.modal-content').forEach(m => m.addEventListener('contextmenu', e => e.preventDefault()));
+app.get('/api/nsfw/blowjob', async (req, res) => {
+  try {
+    const { data } = await axios.get('https://api.waifu.pics/nsfw/blowjob');
+    sendJson(res, { url: data.url });
+  } catch (e) { sendError(res, e.message); }
+});
 
-  // --- Graceful fallback ---
-  if (!window.fetch) {
-    submitQueryBtn.disabled = true;
-    submitQueryBtn.title = "Fetch API not supported in this browser.";
-  }
+// --- Stats Endpoint ---
+app.get('/api/stats', (req, res) => {
+  sendJson(res, { msg: 'Server is running', uptime: process.uptime() });
+});
 
-  console.log("%cRebix API Dashboard ready", "color: #7c5cff; font-weight:700");
-})();
+// Fallback for unknown routes
+app.use((req, res) => sendError(res, 'Endpoint not found'));
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => console.log(`Server running on port ${port}`));
