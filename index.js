@@ -13,7 +13,9 @@ const sharp = require('sharp');
 
 const app = express();
 app.use(cors());
-app.use(express.static(__dirname)); // index.html, script.js, CSS…
+//app.use(express.static(__dirname)); // index.html, script.js, CSS…
+const path = require('path');
+app.use(express.static(path.join(__dirname, '/')));
 
 const hf = new HfInference(process.env.HF_TOKEN);
 const genius = new Genius.Client(process.env.GENIUS_TOKEN);
