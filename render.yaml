@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: crazy-api
+    env: node
+    plan: free
+    branch: main
+    buildCommand: npm install
+    startCommand: node index.js
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: 18
